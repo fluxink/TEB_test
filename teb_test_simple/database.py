@@ -34,6 +34,7 @@ def get_user(session: Session, user_id):
     return session.query(User).filter(User.id == user_id).first()
 
 def save_user(session, user):
+    user = User(**user)
     session.add(user)
     session.commit()
 
