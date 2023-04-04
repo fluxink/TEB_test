@@ -5,7 +5,7 @@ import subprocess
 api_process = multiprocessing.Process(
     target=subprocess.run,
     kwargs={
-        'args': f'py teb_test_simple/web.py',
+        'args': f'python3 teb_test_simple/web.py',
         'shell': True
     })
 
@@ -13,7 +13,7 @@ api_process = multiprocessing.Process(
 bot_process = multiprocessing.Process(
     target=subprocess.run,
     kwargs={
-        'args': f'py teb_test_simple/bot.py',
+        'args': f'python3 teb_test_simple/bot.py',
         'shell': True
     })
 
