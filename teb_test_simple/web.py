@@ -21,7 +21,7 @@ def check_tg_auth(auth_data, bot_token):
     hash_value = hmac.new(secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256).hexdigest()
     if hash_value != check_hash:
         raise Exception('Data is NOT from Telegram')
-    if (time.time() - auth_data['auth_date']) > 86400:
+    if (time.time() - float(auth_data['auth_date'])) > 86400:
         raise Exception('Data is outdated')
     return auth_data
 
