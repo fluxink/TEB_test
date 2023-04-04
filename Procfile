@@ -1,0 +1,1 @@
+web: python3 teb_test_simple/main.py
