@@ -31,11 +31,6 @@ def check_parameters(source) -> dict:
         auth_data[key] = value
 
     if ('id' not in auth_data or
-        'first_name' not in auth_data or
-        'last_name' not in auth_data or
-        'username' not in auth_data or
-        'photo_url' not in auth_data or
-        'auth_date' not in auth_data or
         'hash' not in auth_data):
         return None
     
