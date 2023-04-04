@@ -4,26 +4,33 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from utils.database import init_db, get_user, save_user, User
+from database import init_db, get_user, save_user
 
 API_TOKEN = os.getenv('API_TOKEN')
 
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
+session = init_db()
 
 
 class Registration(StatesGroup):
     name = State()
     username = State()
-    sex = State()
     age = State()
+    sex = State()
 
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
+    user = get_user(session, message.from_user.id)
+    if user:
+        await message.answer(f'Hello, {str(user)}!')
+        return
     await Registration.name.set()
     await message.answer(
         '''
@@ -34,6 +41,7 @@ async def start(message: types.Message):
 @dp.message_handler(state=Registration.name)
 async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
+        data['telegram_id'] = message.from_user.id
         data['name'] = message.text
     await Registration.next()
     await message.answer('What is your username?')
@@ -43,8 +51,8 @@ async def process_username(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['username'] = message.text
     await Registration.next()
+    await message.answer('How old are you?')
 
-# Validate age
 def validate_age(message: types.Message) -> bool:
     try:
         age = int(message.text)
@@ -52,21 +60,22 @@ def validate_age(message: types.Message) -> bool:
         return False
     return 0 < age < 100
 
-@dp.message_handler(not validate_age, state=Registration.age)
-async def process_age_invalid(message: types.Message):
+@dp.message_handler(lambda message: not validate_age(message), state=Registration.age)
+async def process_incorrect_age(message: types.Message):
     return await message.reply('Age must be a number between 0 and 100')
 
 @dp.message_handler(validate_age, state=Registration.age)
 async def process_age(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['age'] = message.text
-    kb = [ [
+    await Registration.next()
+    keyboard = [ [
         types.KeyboardButton(text='Male'),
         types.KeyboardButton(text='Female'),
         types.KeyboardButton(text='Other'),
     ] ]
     markup = types.ReplyKeyboardMarkup(
-        keyboard=kb,
+        keyboard=keyboard,
         resize_keyboard=True,
         one_time_keyboard=True,
         input_field_placeholder='Your sex?'
@@ -77,16 +86,14 @@ async def process_age(message: types.Message, state: FSMContext):
 async def process_sex(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['sex'] = message.text
-        data['telegram_id'] = message.from_user.id
+    await state.finish()
+    try:
+        save_user(session, data)
+    except ValueError:
+        return await message.answer('User already exists')
+
     await message.answer('Thank you for your registration!')
 
-async def save_user_to_db(session, user_data: dict):
-    user = await get_user(session, user_data['telegram_id'])
-    if user:
-        raise ValueError('User already exists')
-    else:
-        user = User(**user_data)
-    await save_user(session, user)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)

@@ -19,14 +19,21 @@ class User(Base):
     def __repr__(self):
         return f'{self.username} ({self.name})'
 
+    def __str__(self):
+        return self.__repr__()
+
 def init_db():
     engine = create_engine('sqlite:///db.sqlite3')
     Base.metadata.create_all(engine)
     return Session(bind=engine)
 
-async def get_user(session, telegram_id):
-    return await session.query(User).filter(User.telegram_id == telegram_id).first()
+def get_user_by_tg_id(session: Session, telegram_id):
+    return session.query(User).filter(User.telegram_id == telegram_id).first()
+
+def get_user(session: Session, user_id):
+    return session.query(User).filter(User.id == user_id).first()
 
 def save_user(session, user):
     session.add(user)
     session.commit()
+
