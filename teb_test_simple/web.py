@@ -25,6 +25,8 @@ def authorizhed(func):
         session_id = request.cookies.get('session_id')
         if session_id and sessions.get(session_id):
             return func(*args, **kwargs)
+        elif session_id:
+            return redirect(url_for('logout'))
         return redirect(url_for('index'))
 
     return wrapper
@@ -49,7 +51,7 @@ def index() -> Union[str, redirect, make_response, render_template]:
     elif request.cookies.get('session_id'):
         return redirect(url_for('user'))
 
-    return render_template('index.html.jinja', data_telegram_login=BOT_LOGIN, data_auth_utl=SITE_URL)
+    return render_template('index.html.jinja', data_telegram_login=BOT_LOGIN, data_auth_url=SITE_URL)
 
 @app.route('/register')
 def register() -> redirect:
