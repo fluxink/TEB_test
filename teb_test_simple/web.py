@@ -53,7 +53,10 @@ def index():
         if user:
             response = make_response(redirect(url_for('user')))
             session_id = generate_session_id()
-            session[session_id] = user.id
+            session[session_id] = {
+                'id': user.id,
+                'photo_url': auth_data.get('photo_url'),
+            }
             response.set_cookie('session_id', session_id)
             return response
         else:
@@ -71,9 +74,9 @@ def register():
 @app.route('/user')
 def user():
     if request.cookies.get('session_id'):
-        user_id = session[request.cookies.get('session_id')]
-        user = get_user(sql_session, user_id)
-        return render_template('user.html.jinja', user=user)
+        user_session = session[request.cookies.get('session_id')]
+        user = get_user(sql_session, user_session['id'])
+        return render_template('user.html.jinja', user=user, photo_url=user_session['photo_url'])
     else:
         return redirect(url_for('index'))
 
