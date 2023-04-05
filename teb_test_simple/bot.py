@@ -117,7 +117,7 @@ async def process_sex(message: types.Message, state: FSMContext):
 
     link_keyboard = get_keyboard_to_site()
 
-    await message.answer('Thank you for your registration!', reply_markup=link_keyboard)
+    await message.answer('Thank you for your registration!\nYou can now log in', reply_markup=link_keyboard)
 
 
 if __name__ == '__main__':
