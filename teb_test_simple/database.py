@@ -16,10 +16,10 @@ class User(Base):
     age : Mapped[int] = mapped_column()
     sex : Mapped[str] = mapped_column()
 
-    __table_args__ = {
+    __table_args__ = (
         CheckConstraint('age > 14 AND age < 101', name='age_check'),
         CheckConstraint(sex.in_(['Male', 'Female', 'Other']), name='valid_sex_values'),
-    }
+    )
 
     def __repr__(self):
         return f'{self.username} ({self.name})'
