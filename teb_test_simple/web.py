@@ -9,7 +9,8 @@ from database import get_user_by_tg_id, get_user, init_db
 
 
 def check_tg_auth(auth_data, bot_token):
-    check_hash = auth_data['hash']
+    auth_data = auth_data.copy()
+    check_hash = auth_data.pop('hash')
     data_check_arr = []
     for key, value in auth_data.items():
         data_check_arr.append(f"{key}={value}")
