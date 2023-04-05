@@ -5,8 +5,9 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
-from database import init_db, get_user, save_user
+from database import init_db, get_user_by_tg_id, save_user
 
 API_TOKEN = os.getenv('API_TOKEN')
 
@@ -27,9 +28,16 @@ class Registration(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    user = get_user(session, message.from_user.id)
+    user = get_user_by_tg_id(session, message.from_user.id)
     if user:
-        await message.answer(f'Hello, {str(user)}!')
+        link_keyboard = InlineKeyboardMarkup()
+        link_keyboard.add(
+            InlineKeyboardButton(
+                text='Go to the site', 
+                url='https://teb-test.herokuapp.com/'
+            )
+        )
+        await message.answer(f'Hello, {str(user)}!', reply_markup=link_keyboard)
         return
     await Registration.name.set()
     await message.answer(
@@ -82,7 +90,14 @@ async def process_age(message: types.Message, state: FSMContext):
         )
     await message.answer('What is your sex?', reply_markup=markup)
 
-@dp.message_handler(state=Registration.sex)
+def validate_sex(message: types.Message) -> bool:
+    return message.text in ['Male', 'Female', 'Other']
+
+@dp.message_handler(lambda message: not validate_sex(message), state=Registration.sex)
+async def process_incorrect_sex(message: types.Message):
+    return await message.reply('Select the correct option [Male, Female, Other]')
+
+@dp.message_handler(validate_sex, state=Registration.sex)
 async def process_sex(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['sex'] = message.text
@@ -92,7 +107,16 @@ async def process_sex(message: types.Message, state: FSMContext):
     except ValueError:
         return await message.answer('User already exists')
 
-    await message.answer('Thank you for your registration!')
+    link_keyboard = InlineKeyboardMarkup()
+    link_keyboard.add(
+        InlineKeyboardButton(
+            text='Go to the site', 
+            url='https://teb-test.herokuapp.com/'
+        )
+    )
+
+    await message.answer('Thank you for your registration!', reply_markup=link_keyboard)
+    
 
 
 if __name__ == '__main__':
