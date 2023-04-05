@@ -63,8 +63,8 @@ def index() -> Union[str, redirect, make_response, render_template]:
 def register() -> redirect:
     return redirect(BOT_URL)
 
-@authorizhed
 @app.route('/user')
+@authorizhed
 def user() -> Union[str, redirect, render_template]:
     session_data = sessions.get(request.cookies.get('session_id'))
     user = user_get(sql_session, session_data.get('id'))
@@ -81,15 +81,15 @@ def logout() -> make_response:
         response.set_cookie(key, '', expires=0)
     return response
 
-@authorizhed
 @app.route('/delete-user')
+@authorizhed
 def delete_user():
     session_data = sessions.get(request.cookies.get('session_id'))
     user_delete(sql_session, session_data['id'])
     return redirect(url_for('logout'))
 
-@authorizhed
 @app.route('/list-users')
+@authorizhed
 def list_users() -> Union[str, render_template]:
     users = user_list(sql_session)
     return render_template('list_users.html.jinja', users=users)
