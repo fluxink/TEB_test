@@ -16,7 +16,7 @@ def check_tg_auth(auth_data, bot_token):
         data_check_arr.append(f"{key}={value}")
     data_check_arr.sort()
     data_check_string = "\n".join(data_check_arr)
-    secret_key = hashlib.sha256(bot_token.encode()).digest()
+    secret_key = hashlib.sha256(bot_token.encode()).hexdigest()
     hash_value = hmac.new(secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256).hexdigest()
     print(hash_value)
     print(check_hash)
