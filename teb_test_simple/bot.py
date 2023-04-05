@@ -8,7 +8,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
 from database import init_db, get_user_by_tg_id, save_user
-from services import get_keyboard_to_site, validate_age, validate_sex
+from services import validate_age, validate_sex
 
 API_TOKEN = os.getenv('API_TOKEN')
 
@@ -26,6 +26,16 @@ class Registration(StatesGroup):
     age = State()
     sex = State()
 
+
+def get_keyboard_to_site() -> InlineKeyboardMarkup:
+    link_keyboard = InlineKeyboardMarkup()
+    link_keyboard.add(
+        InlineKeyboardButton(
+            text='Go to the site', 
+            url=os.getenv('SITE_URL')
+        )
+    )
+    return link_keyboard
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
@@ -58,7 +68,7 @@ async def process_username(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: not validate_age(message), state=Registration.age)
 async def process_incorrect_age(message: types.Message):
-    return await message.reply('Age must be a number between 0 and 100')
+    return await message.reply('Age must be a number between 14 and 100')
 
 @dp.message_handler(validate_age, state=Registration.age)
 async def process_age(message: types.Message, state: FSMContext):

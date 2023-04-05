@@ -4,9 +4,15 @@ from typing import Dict, Union
 from flask import Flask, redirect, url_for, request, \
     make_response, render_template
 
-from database import get_user_by_tg_id, get_user, init_db, User
+from database import (
+    user_get_by_tg_id, 
+    user_get,
+    user_list,
+    user_delete,
+    init_db,
+)
 from services import (
-    data_check_str,
+    validate_hash,
     check_parameters,
     generate_session_id,
 )
@@ -34,9 +40,9 @@ def authorizhed(func):
 @app.route('/')
 def index() -> Union[str, redirect, make_response, render_template]:
     if auth_data := check_parameters(request.args):
-        if not data_check_str(auth_data, API_TOKEN):
+        if not validate_hash(auth_data, API_TOKEN):
             return 'Wrong hash'
-        user = get_user_by_tg_id(sql_session, auth_data['id'])
+        user = user_get_by_tg_id(sql_session, auth_data['id'])
         if user:
             response = make_response(redirect(url_for('user')))
             session_id = generate_session_id()
@@ -61,7 +67,7 @@ def register() -> redirect:
 @app.route('/user')
 def user() -> Union[str, redirect, render_template]:
     session_data = sessions.get(request.cookies.get('session_id'))
-    user = get_user(sql_session, session_data['id'])
+    user = user_get(sql_session, session_data['id'])
     if user:
         return render_template('user.html.jinja', user=user, photo_url=session_data['photo_url'])
     return redirect(url_for('index'))
@@ -79,16 +85,13 @@ def logout() -> make_response:
 @app.route('/delete-user')
 def delete_user():
     session_data = sessions.get(request.cookies.get('session_id'))
-    user = get_user(sql_session, session_data['id'])
-    if user:
-        sql_session.delete(user)
-        sql_session.commit()
+    user_delete(sql_session, session_data['id'])
     return redirect(url_for('logout'))
 
 @authorizhed
 @app.route('/list-users')
 def list_users() -> Union[str, render_template]:
-    users = sql_session.query(User).all()
+    users = user_list(sql_session)
     return render_template('list_users.html.jinja', users=users)
 
 if __name__ == '__main__':
