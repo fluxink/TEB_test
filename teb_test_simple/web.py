@@ -2,9 +2,11 @@ import os
 import hashlib
 import urllib.parse
 import hmac
+import uuid
 
 from flask import Flask, redirect, url_for, request, make_response, \
-    render_template
+    render_template, session
+from flask_session import Session
 
 from database import get_user_by_tg_id, get_user, init_db
 
@@ -36,7 +38,14 @@ def check_parameters(source) -> dict:
     
     return auth_data
 
+def generate_session_id():
+    return str(uuid.uuid4())
+
 app = Flask(__name__)
+# Check Configuration section for more details
+SESSION_TYPE = 'memcached'
+app.config.from_object(__name__)
+Session(app)
 
 @app.route('/')
 def index():
@@ -44,22 +53,17 @@ def index():
     if auth_data := check_parameters(request.args):
         if not check_tg_auth(auth_data, os.getenv('API_TOKEN')):
             return 'Wrong hash'
-        user = get_user_by_tg_id(session, auth_data['id'])
+        user = get_user_by_tg_id(sql_session, auth_data['id'])
         if user:
-            response = make_response(redirect(url_for('user', user_id=user.id)))
-            for key, value in auth_data.items():
-                response.set_cookie(key, value)
+            response = make_response(redirect(url_for('user')))
+            session_id = generate_session_id()
+            session[session_id] = user.id
+            response.set_cookie('session_id', session_id)
             return response
         else:
             return redirect(url_for('register'))
-    elif cookies := check_parameters(request.cookies):
-        if not check_tg_auth(cookies, os.getenv('API_TOKEN')):
-            return 'Wrong hash'
-        user = get_user_by_tg_id(session, cookies['id'])
-        if user:
-            return redirect(url_for('user', user_id=user.id))
-        else:
-            return redirect(url_for('register'))
+    elif request.cookies.get('session_id'):
+        return redirect(url_for('user'))
     else:
         response = make_response(render_template('index.html.jinja'))
         return response
@@ -68,26 +72,24 @@ def index():
 def register():
     return redirect("https://t.me/kingdomcome_bot?start=start")
 
-@app.route('/user/<user_id>')
+@app.route('/user')
 def user(user_id):
-    if cookies := check_parameters(request.cookies):
-        if not check_tg_auth(cookies, os.getenv('API_TOKEN')):
-            return 'Wrong hash'
-        user = get_user(session, user_id)
-        if user.telegram_id == cookies['id']:
-            return render_template('user.html.jinja', user=user, cookies=cookies)
-        else:
-            return redirect(url_for('register'))
+    if request.cookies.get('session_id'):
+        user_id = session[request.cookies.get('session_id')]
+        user = get_user(sql_session, user_id)
+        return render_template('user.html.jinja', user=user)
     else:
-        return redirect(url_for('register'))
+        return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     response = make_response(redirect(url_for('index')))
+    if request.cookies.get('session_id'):
+        session.pop(request.cookies.get('session_id'))
     for key in request.cookies:
         response.set_cookie(key, '', expires=0)
     return response
 
 if __name__ == '__main__':
-    session = init_db()
+    sql_session = init_db()
     app.run(debug=True, host='0.0.0.0', port=os.getenv('PORT', 80))
