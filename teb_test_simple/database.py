@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, CheckConstraint
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -12,9 +12,14 @@ class User(Base):
     id : Mapped[int] = mapped_column(primary_key=True)
     name : Mapped[str] = mapped_column()
     username : Mapped[str] = mapped_column()
-    telegram_id : Mapped[int] = mapped_column()
+    telegram_id : Mapped[int] = mapped_column(unique=True)
     age : Mapped[int] = mapped_column()
     sex : Mapped[str] = mapped_column()
+
+    __table_args__ = {
+        CheckConstraint('age > 14 AND age < 101', name='age_check'),
+        CheckConstraint(sex.in_(['Male', 'Female', 'Other']), name='valid_sex_values'),
+    }
 
     def __repr__(self):
         return f'{self.username} ({self.name})'
