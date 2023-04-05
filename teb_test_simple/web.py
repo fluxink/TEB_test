@@ -12,19 +12,15 @@ from database import get_user_by_tg_id, get_user, init_db
 
 def check_tg_auth(auth_data, bot_token):
     auth_data = auth_data.copy()
-    check_hash = auth_data.pop('hash')
+    true_hash = auth_data.pop('hash')
     if 'photo_url' in auth_data:
         auth_data['photo_url'] = urllib.parse.unquote(auth_data['photo_url'])
     
     tg_data = "\n".join([f'{k}={auth_data[k]}' for k in sorted(auth_data)])
-    print(tg_data)
     tg_data = tg_data.encode()
-    print(tg_data)
     secret_key = hashlib.sha256(bot_token.encode()).digest()
-    my_hash = hmac.new(secret_key, tg_data, digestmod=hashlib.sha256).hexdigest()
-    print(my_hash.encode())
-    print(check_hash.encode())
-    return hmac.compare_digest(my_hash.encode(), check_hash.encode())
+    hash = hmac.new(secret_key, tg_data, digestmod=hashlib.sha256).hexdigest()
+    return hmac.compare_digest(hash.encode(), true_hash.encode())
 
 def check_parameters(source) -> dict:
     auth_data = {}
@@ -74,9 +70,11 @@ def register():
 @app.route('/user')
 def user():
     if request.cookies.get('session_id'):
-        user_session = session[request.cookies.get('session_id')]
-        user = get_user(sql_session, user_session['id'])
-        return render_template('user.html.jinja', user=user, photo_url=user_session['photo_url'])
+        if user_session := session.get(request.cookies.get('session_id')):
+            user = get_user(sql_session, user_session['id'])
+            return render_template('user.html.jinja', user=user, photo_url=user_session['photo_url'])
+        else:
+            return redirect(url_for('logout'))
     else:
         return redirect(url_for('index'))
 
