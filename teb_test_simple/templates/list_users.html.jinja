@@ -1,5 +1,5 @@
 {% extends "base.html.jinja" %}
-{% block title %}{{ user.username }}{% endblock %}
+{% block title %}Users{% endblock %}
 {% block content %}
     <nav class="container-fluid">
         <ul>
@@ -19,30 +19,13 @@
                     Logout
                 </a>
             </li>
-            <li>
-                <a href="{{ url_for('list_users') }}">
-                    Users
-                </a>
-            </li>
         </ul>
     </nav>
     <main class="container">
         <article>
-            <div class="grid">
-                <div>
-                    <hgroup>
-                        <h1>
-                            Welcome, {{ user.name }}!
-                        </h1>
-                        <h6>
-                            You are now logged in.
-                        </h6>
-                    </hgroup>
-                </div>
-                <div>
-                    <img src="{{ photo_url }}" alt="User photo">
-                </div>
-            </div>
+            <h1>
+                Registered users
+            </h1>
             <footer>
                 <table role="grid">
                     <thead>
@@ -65,6 +48,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for user in users %}
                         <tr>
                             <td>
                                 {{ user.id }}
@@ -82,9 +66,9 @@
                                 {{ user.sex }}
                             </td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
-                <a href="{{ url_for('delete_user') }}" role="button" style="--background-color: rgba(217, 26, 26); --border-color: rgb(205, 29, 29);">Delete user</a>
             </footer>
         </article>
     </main>

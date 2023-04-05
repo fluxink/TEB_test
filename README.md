@@ -11,7 +11,11 @@ $ pip install -r requirements.txt
 ## Usage
 
 ```bash
-$ export API_TOKEN=<your telegram bot token>
+$ export API_TOKEN=your_api_token
+$ export BOT_URL=https://t.me/kingdomcome_bot?start=start
+$ export BOT_LOGIN=kingdomcome_bot
+$ export SITE_URL=https://teb-test.herokuapp.com/
+
 $ python3 teb_test_simple/main.py
 ```
 

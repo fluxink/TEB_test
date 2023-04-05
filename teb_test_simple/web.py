@@ -4,7 +4,7 @@ from typing import Dict, Union
 from flask import Flask, redirect, url_for, request, \
     make_response, render_template
 
-from database import get_user_by_tg_id, get_user, init_db
+from database import get_user_by_tg_id, get_user, init_db, User
 from services import (
     data_check_str,
     check_parameters,
@@ -74,6 +74,22 @@ def logout() -> make_response:
     for key in request.cookies:
         response.set_cookie(key, '', expires=0)
     return response
+
+@authorizhed
+@app.route('/delete-user')
+def delete_user():
+    session_data = sessions.get(request.cookies.get('session_id'))
+    user = get_user(sql_session, session_data['id'])
+    if user:
+        sql_session.delete(user)
+        sql_session.commit()
+    return redirect(url_for('logout'))
+
+@authorizhed
+@app.route('/list-users')
+def list_users() -> Union[str, render_template]:
+    users = sql_session.query(User).all()
+    return render_template('list_users.html.jinja', users=users)
 
 if __name__ == '__main__':
     sql_session = init_db()
