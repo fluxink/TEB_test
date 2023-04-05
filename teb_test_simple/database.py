@@ -33,6 +33,8 @@ def user_get_by_tg_id(session: Session, telegram_id) -> User:
     return session.query(User).filter(User.telegram_id == telegram_id).first()
 
 def user_get(session: Session, user_id: int) -> User:
+    if not isinstance(user_id, int):
+        return None
     return session.query(User).filter(User.id == user_id).first()
 
 def user_save(session: Session, user: dict) -> None:
