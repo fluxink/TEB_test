@@ -17,6 +17,8 @@ def check_tg_auth(auth_data, bot_token):
     data_check_string = "\n".join(data_check_arr)
     secret_key = hashlib.sha256(bot_token.encode()).digest()
     hash_value = hmac.new(secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256).hexdigest()
+    print(hash_value)
+    print(check_hash)
     if hash_value != check_hash:
         raise Exception('Data is NOT from Telegram')
     return auth_data
