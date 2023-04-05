@@ -5,8 +5,7 @@ import hmac
 import uuid
 
 from flask import Flask, redirect, url_for, request, make_response, \
-    render_template, session
-from flask_session import Session
+    render_template
 
 from database import get_user_by_tg_id, get_user, init_db
 
@@ -42,10 +41,7 @@ def generate_session_id():
     return str(uuid.uuid4())
 
 app = Flask(__name__)
-# Check Configuration section for more details
-SESSION_TYPE = 'memcached'
-app.config.from_object(__name__)
-Session(app)
+session = {}
 
 @app.route('/')
 def index():
