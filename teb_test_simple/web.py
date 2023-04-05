@@ -69,7 +69,7 @@ def register():
     return redirect("https://t.me/kingdomcome_bot?start=start")
 
 @app.route('/user')
-def user(user_id):
+def user():
     if request.cookies.get('session_id'):
         user_id = session[request.cookies.get('session_id')]
         user = get_user(sql_session, user_id)
