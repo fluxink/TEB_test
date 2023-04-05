@@ -39,3 +39,9 @@ def validate_age(message: types.Message) -> bool:
 
 def validate_sex(message: types.Message) -> bool:
     return message.text in ['Male', 'Female', 'Other']
+
+def validate_username(message: types.Message) -> bool:
+    return 1 < len(message.text) < 30
+
+def validate_name(message: types.Message) -> bool:
+    return 1 < len(message.text) < 30
