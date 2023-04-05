@@ -7,7 +7,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
-from database import init_db, get_user_by_tg_id, save_user
+from database import init_db, user_get_by_tg_id, user_save
 from services import validate_age, validate_sex
 
 API_TOKEN = os.getenv('API_TOKEN')
@@ -39,7 +39,7 @@ def get_keyboard_to_site() -> InlineKeyboardMarkup:
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    user = get_user_by_tg_id(session, message.from_user.id)
+    user = user_get_by_tg_id(session, message.from_user.id)
     if user:
         link_keyboard = get_keyboard_to_site()
         await message.answer(f'Hello, {str(user)}!', reply_markup=link_keyboard)
@@ -98,7 +98,7 @@ async def process_sex(message: types.Message, state: FSMContext):
         data['sex'] = message.text
     await state.finish()
     try:
-        save_user(session, data)
+        user_save(session, data)
     except ValueError:
         return await message.answer('User already exists')
 
