@@ -9,7 +9,7 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def data_check_str(data: Dict[str, str], bot_token: str) -> bool:
+def validate_hash(data: Dict[str, str], bot_token: str) -> bool:
     data = data.copy()
     true_hash = data.pop('hash')
     
@@ -35,17 +35,13 @@ def validate_age(message: types.Message) -> bool:
         age = int(message.text)
     except ValueError:
         return False
-    return 14 < age < 101
+    return 13 < age < 101
 
 def validate_sex(message: types.Message) -> bool:
     return message.text in ['Male', 'Female', 'Other']
 
-def get_keyboard_to_site() -> InlineKeyboardMarkup:
-    link_keyboard = InlineKeyboardMarkup()
-    link_keyboard.add(
-        InlineKeyboardButton(
-            text='Go to the site', 
-            url=os.getenv('SITE_URL')
-        )
-    )
-    return link_keyboard
+def validate_username(message: types.Message) -> bool:
+    return 1 < len(message.text) < 30
+
+def validate_name(message: types.Message) -> bool:
+    return 1 < len(message.text) < 30

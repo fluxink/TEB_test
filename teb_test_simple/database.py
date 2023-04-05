@@ -29,13 +29,24 @@ def init_db() -> Session:
     Base.metadata.create_all(engine)
     return Session(bind=engine)
 
-def get_user_by_tg_id(session: Session, telegram_id) -> User:
+def user_get_by_tg_id(session: Session, telegram_id) -> User:
     return session.query(User).filter(User.telegram_id == telegram_id).first()
 
-def get_user(session: Session, user_id: int) -> User:
+def user_get(session: Session, user_id: int) -> User:
+    if not isinstance(user_id, int):
+        return None
     return session.query(User).filter(User.id == user_id).first()
 
-def save_user(session: Session, user: dict) -> None:
+def user_save(session: Session, user: dict) -> None:
     user = User(**user)
     session.add(user)
     session.commit()
+
+def user_delete(session: Session, user_id: int) -> None:
+    user = user_get(session, user_id)
+    if user:
+        session.delete(user)
+        session.commit()
+
+def user_list(session: Session) -> list[User]:
+    return session.query(User).all()

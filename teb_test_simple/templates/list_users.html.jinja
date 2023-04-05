@@ -1,5 +1,5 @@
 {% extends "base.html.jinja" %}
-{% block title %}{{ user.username|e }}{% endblock %}
+{% block title %}Users{% endblock %}
 {% block content %}
     <nav class="container-fluid">
         <ul>
@@ -15,11 +15,6 @@
         </ul>
         <ul>
             <li>
-                <a href="{{ url_for('list_users') }}">
-                    Users
-                </a>
-            </li>
-            <li>
                 <a href="{{ url_for('logout') }}">
                     Logout
                 </a>
@@ -28,21 +23,9 @@
     </nav>
     <main class="container">
         <article>
-            <div class="grid">
-                <div>
-                    <hgroup>
-                        <h1>
-                            Welcome, {{ user.name|e }}!
-                        </h1>
-                        <h6>
-                            You are now logged in.
-                        </h6>
-                    </hgroup>
-                </div>
-                <div style="text-align: right;">
-                    <img src="{{ photo_url }}" alt="User photo">
-                </div>
-            </div>
+            <h1>
+                Registered users
+            </h1>
             <footer>
                 <table role="grid">
                     <thead>
@@ -65,6 +48,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for user in users %}
                         <tr>
                             <td>
                                 {{ user.id }}
@@ -82,18 +66,9 @@
                                 {{ user.sex }}
                             </td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
-                <div class="grid">
-                    <div></div>
-                    <div></div>
-                    <div>
-                        <a href="{{ url_for('delete_user') }}" role="button" style="--background-color: rgba(217, 26, 26); --border-color: rgb(205, 29, 29);">Delete user</a>
-                    </div>
-                    <div></div>
-                    <div></div>
-                  </div>
-                
             </footer>
         </article>
     </main>
