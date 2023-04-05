@@ -57,8 +57,8 @@ def index() -> Union[str, redirect, make_response, render_template]:
 def register() -> redirect:
     return redirect(BOT_URL)
 
-@app.route('/user')
 @authorizhed
+@app.route('/user')
 def user() -> Union[str, redirect]:
     user = get_user(sql_session, sessions[request.cookies.get('session_id')]['id'])
     if user:
