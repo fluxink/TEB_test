@@ -8,20 +8,15 @@ from flask import Flask, redirect, url_for, request, make_response, \
 from database import get_user_by_tg_id, get_user, init_db
 
 
-def check_tg_auth(auth_data, bot_token):
-    check_hash = auth_data['hash']
-    data_check_arr = []
-    for key, value in auth_data.items():
-        data_check_arr.append(f"{key}={value}")
-    data_check_arr.sort()
-    data_check_string = "\n".join(data_check_arr)
-    secret_key = hashlib.sha256(bot_token.encode()).digest()
-    hash_value = hmac.new(secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256).hexdigest()
-    print(hash_value)
-    print(check_hash)
-    if hash_value != check_hash:
-        raise Exception('Data is NOT from Telegram')
-    return auth_data
+def check_tg_auth(data, bot_token):
+    auth_data = data.copy()
+    hash_received = auth_data.pop('hash')
+    sorted_data = sorted(auth_data.items())
+    data_str = '\n'.join([f'{key}={value}' for key, value in sorted_data])
+    hashed_bot_token = hashlib.sha256(bot_token.encode()).digest()
+    hmac_signature = hmac.new(hashed_bot_token, msg=data_str.encode(), digestmod=hashlib.sha256).hexdigest()
+
+    return hmac_signature == hash_received
 
 def check_parameters(source) -> dict:
     auth_data = {}
@@ -40,10 +35,8 @@ app = Flask(__name__)
 def index():
 
     if auth_data := check_parameters(request.args):
-        try:
-            auth_data = check_tg_auth(auth_data, os.getenv('API_TOKEN'))
-        except Exception as e:
-            return str(e)
+        if not check_tg_auth(auth_data, os.getenv('API_TOKEN')):
+            return 'Wrong hash'
         user = get_user_by_tg_id(session, auth_data['id'])
         if user:
             response = make_response(redirect(url_for('user', user_id=user.id)))
@@ -53,10 +46,8 @@ def index():
         else:
             return redirect(url_for('register'))
     elif cookies := check_parameters(request.cookies):
-        try:
-            cookies = check_tg_auth(cookies, os.getenv('API_TOKEN'))
-        except Exception as e:
-            return str(e)
+        if not check_tg_auth(cookies, os.getenv('API_TOKEN')):
+            return 'Wrong hash'
         user = get_user_by_tg_id(session, cookies['id'])
         if user:
             return redirect(url_for('user', user_id=user.id))
@@ -73,10 +64,8 @@ def register():
 @app.route('/user/<user_id>')
 def user(user_id):
     if cookies := check_parameters(request.cookies):
-        try:
-            cookies = check_tg_auth(cookies, os.getenv('API_TOKEN'))
-        except Exception as e:
-            return str(e)
+        if not check_tg_auth(cookies, os.getenv('API_TOKEN')):
+            return 'Wrong hash'
         user = get_user(session, user_id)
         if user.telegram_id == cookies['id']:
             return render_template('user.html.jinja', user=user, cookies=cookies)
