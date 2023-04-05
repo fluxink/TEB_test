@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
+    <title>Website - {% block title %}{% endblock %}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
         * {
@@ -13,8 +14,7 @@
     </style>
 </head>
 <body>
-    <h1>Telegram authentification</h1>
-    <p>Click the button below to start the authentification process</p>
-    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="kingdomcome_bot" data-size="large" data-auth-url="https://teb-test.herokuapp.com/" data-request-access="write"></script>
+    {% block content %}
+    {% endblock %}
 </body>
 </html>

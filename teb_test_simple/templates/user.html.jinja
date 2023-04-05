@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}User{% endblock %}
+{% block content %}
+    <nav class="container-fluid">
+        <ul>
+            <li>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <strong>
+                    Website
+                </strong>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <a href="{{ url_for('logout')}}">
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <main class="container">
+        <article>
+            <div class="grid">
+                <div>
+                    <hgroup>
+                        <h1>
+                            Welcome, {{ user.name }}!
+                        </h1>
+                        <h6>
+                            You are now logged in.
+                        </h6>
+                    </hgroup>
+                </div>
+                <div>
+                    <img src="{{ cookies.photo_url }}" alt="User photo">
+                </div>
+            </div>
+            <footer>
+                <table role="grid">
+                    <thead>
+                        <tr>
+                            <th>
+                                ID
+                            </th>
+                            <th>
+                                Name
+                            </th>
+                            <th>
+                                Username
+                            </th>
+                            <th>
+                                Age
+                            </th>
+                            <th>
+                                Sex
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                {{ user.id }}
+                            </td>
+                            <td>
+                                {{ user.name }}
+                            </td>
+                            <td>
+                                {{ user.username }}
+                            </td>
+                            <td>
+                                {{ user.age }}
+                            </td>
+                            <td>
+                                {{ user.sex }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </footer>
+        </article>
+    </main>
+{% endblock %}

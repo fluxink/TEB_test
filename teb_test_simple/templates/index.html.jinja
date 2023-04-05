@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Auth{% endblock %}
+{% block content %}
+    <main class="container">
+        <article style="text-align: center;">
+            <hgroup>
+                <h1>Telegram authentification</h1>
+                <h6>Click the button below to start the authentification process</h6>
+            </hgroup>
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="kingdomcome_bot" data-size="large" data-auth-url="https://teb-test.herokuapp.com/" data-request-access="write"></script>
+        </article>
+    </main>
+{% endblock %}
