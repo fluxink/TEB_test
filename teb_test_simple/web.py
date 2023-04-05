@@ -59,10 +59,11 @@ def register() -> redirect:
 
 @authorizhed
 @app.route('/user')
-def user() -> Union[str, redirect]:
-    user = get_user(sql_session, sessions[request.cookies.get('session_id')]['id'])
+def user() -> Union[str, redirect, render_template]:
+    session_data = sessions.get(request.cookies.get('session_id'))
+    user = get_user(sql_session, session_data['id'])
     if user:
-        return render_template('user.html.jinja', user=user)
+        return render_template('user.html.jinja', user=user, photo_url=session_data['photo_url'])
     return redirect(url_for('index'))
 
 @app.route('/logout')
