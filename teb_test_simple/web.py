@@ -21,8 +21,6 @@ def check_tg_auth(auth_data, bot_token):
     hash_value = hmac.new(secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256).hexdigest()
     if hash_value != check_hash:
         raise Exception('Data is NOT from Telegram')
-    if (time.time() - float(auth_data['auth_date'])) > 86400:
-        raise Exception('Data is outdated')
     return auth_data
 
 def check_parameters(source) -> dict:
@@ -51,7 +49,7 @@ def index():
             response = make_response(redirect(url_for('user', user_id=user.id)))
             for key, value in auth_data.items():
                 response.set_cookie(key, value)
-            return redirect(url_for('user', user_id=user.id))
+            return response
         else:
             return redirect(url_for('register'))
     elif cookies := check_parameters(request.cookies):
@@ -65,8 +63,7 @@ def index():
         else:
             return redirect(url_for('register'))
     else:
-        response = make_response(render_template('base.html.jinja'))
-        response.headers.add('SameSite=None;', 'Secure')
+        response = make_response(render_template('index.html.jinja'))
         return response
 
 @app.route('/register')
@@ -75,12 +72,25 @@ def register():
 
 @app.route('/user/<user_id>')
 def user(user_id):
-    user = get_user(session, user_id)
-    if user:
-        return f'Hello, {user.name}!'
+    if cookies := check_parameters(request.cookies):
+        try:
+            cookies = check_tg_auth(cookies, os.getenv('API_TOKEN'))
+        except Exception as e:
+            return str(e)
+        user = get_user(session, user_id)
+        if user.telegram_id == cookies['id']:
+            return render_template('user.html.jinja', user=user, cookies=cookies)
+        else:
+            return redirect(url_for('register'))
     else:
-        return 'User not found'
+        return redirect(url_for('register'))
 
+@app.route('/logout')
+def logout():
+    response = make_response(redirect(url_for('index')))
+    for key in request.cookies:
+        response.set_cookie(key, '', expires=0)
+    return response
 
 if __name__ == '__main__':
     session = init_db()
