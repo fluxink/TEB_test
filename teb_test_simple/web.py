@@ -41,10 +41,8 @@ app = Flask(__name__)
 def index():
 
     if auth_data := check_parameters(request.args):
-        try:
-            auth_data = check_tg_auth(auth_data, os.getenv('API_TOKEN'))
-        except Exception as e:
-            return str(e)
+        if not check_tg_auth(auth_data, os.getenv('API_TOKEN')):
+            return 'Wrong hash'
         user = get_user_by_tg_id(session, auth_data['id'])
         if user:
             response = make_response(redirect(url_for('user', user_id=user.id)))
@@ -54,10 +52,8 @@ def index():
         else:
             return redirect(url_for('register'))
     elif cookies := check_parameters(request.cookies):
-        try:
-            cookies = check_tg_auth(cookies, os.getenv('API_TOKEN'))
-        except Exception as e:
-            return str(e)
+        if not check_tg_auth(cookies, os.getenv('API_TOKEN')):
+            return 'Wrong hash'
         user = get_user_by_tg_id(session, cookies['id'])
         if user:
             return redirect(url_for('user', user_id=user.id))
@@ -74,10 +70,8 @@ def register():
 @app.route('/user/<user_id>')
 def user(user_id):
     if cookies := check_parameters(request.cookies):
-        try:
-            cookies = check_tg_auth(cookies, os.getenv('API_TOKEN'))
-        except Exception as e:
-            return str(e)
+        if not check_tg_auth(cookies, os.getenv('API_TOKEN')):
+            return 'Wrong hash'
         user = get_user(session, user_id)
         if user.telegram_id == cookies['id']:
             return render_template('user.html.jinja', user=user, cookies=cookies)
