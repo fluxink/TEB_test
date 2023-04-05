@@ -1,10 +1,10 @@
 {% extends "base.html.jinja" %}
-{% block title %}{{ user.username }}{% endblock %}
+{% block title %}{{ user.username|e }}{% endblock %}
 {% block content %}
     <nav class="container-fluid">
         <ul>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
         </ul>
         <ul>
             <li>
@@ -15,13 +15,13 @@
         </ul>
         <ul>
             <li>
-                <a href="{{ url_for('logout') }}">
-                    Logout
+                <a href="{{ url_for('list_users') }}">
+                    Users
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('list_users') }}">
-                    Users
+                <a href="{{ url_for('logout') }}">
+                    Logout
                 </a>
             </li>
         </ul>
@@ -32,7 +32,7 @@
                 <div>
                     <hgroup>
                         <h1>
-                            Welcome, {{ user.name }}!
+                            Welcome, {{ user.name|e }}!
                         </h1>
                         <h6>
                             You are now logged in.
@@ -70,10 +70,10 @@
                                 {{ user.id }}
                             </td>
                             <td>
-                                {{ user.name }}
+                                {{ user.name|e }}
                             </td>
                             <td>
-                                {{ user.username }}
+                                {{ user.username|e }}
                             </td>
                             <td>
                                 {{ user.age }}

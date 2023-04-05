@@ -3,8 +3,8 @@
 {% block content %}
     <nav class="container-fluid">
         <ul>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
         </ul>
         <ul>
             <li>
@@ -54,10 +54,10 @@
                                 {{ user.id }}
                             </td>
                             <td>
-                                {{ user.name }}
+                                {{ user.name|e }}
                             </td>
                             <td>
-                                {{ user.username }}
+                                {{ user.username|e }}
                             </td>
                             <td>
                                 {{ user.age }}
