@@ -8,6 +8,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
 from database import init_db, get_user_by_tg_id, save_user
+from services import get_keyboard_to_site, validate_age, validate_sex
 
 API_TOKEN = os.getenv('API_TOKEN')
 
@@ -30,13 +31,7 @@ class Registration(StatesGroup):
 async def start(message: types.Message):
     user = get_user_by_tg_id(session, message.from_user.id)
     if user:
-        link_keyboard = InlineKeyboardMarkup()
-        link_keyboard.add(
-            InlineKeyboardButton(
-                text='Go to the site', 
-                url='https://teb-test.herokuapp.com/'
-            )
-        )
+        link_keyboard = get_keyboard_to_site()
         await message.answer(f'Hello, {str(user)}!', reply_markup=link_keyboard)
         return
     await Registration.name.set()
@@ -61,13 +56,6 @@ async def process_username(message: types.Message, state: FSMContext):
     await Registration.next()
     await message.answer('How old are you?')
 
-def validate_age(message: types.Message) -> bool:
-    try:
-        age = int(message.text)
-    except ValueError:
-        return False
-    return 0 < age < 100
-
 @dp.message_handler(lambda message: not validate_age(message), state=Registration.age)
 async def process_incorrect_age(message: types.Message):
     return await message.reply('Age must be a number between 0 and 100')
@@ -90,9 +78,6 @@ async def process_age(message: types.Message, state: FSMContext):
         )
     await message.answer('What is your sex?', reply_markup=markup)
 
-def validate_sex(message: types.Message) -> bool:
-    return message.text in ['Male', 'Female', 'Other']
-
 @dp.message_handler(lambda message: not validate_sex(message), state=Registration.sex)
 async def process_incorrect_sex(message: types.Message):
     return await message.reply('Select the correct option [Male, Female, Other]')
@@ -107,16 +92,9 @@ async def process_sex(message: types.Message, state: FSMContext):
     except ValueError:
         return await message.answer('User already exists')
 
-    link_keyboard = InlineKeyboardMarkup()
-    link_keyboard.add(
-        InlineKeyboardButton(
-            text='Go to the site', 
-            url='https://teb-test.herokuapp.com/'
-        )
-    )
+    link_keyboard = get_keyboard_to_site()
 
     await message.answer('Thank you for your registration!', reply_markup=link_keyboard)
-    
 
 
 if __name__ == '__main__':

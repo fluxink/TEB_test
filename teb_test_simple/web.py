@@ -1,55 +1,44 @@
 import os
-import hashlib
-import urllib.parse
-import hmac
-import uuid
+from typing import Dict, Union
 
-from flask import Flask, redirect, url_for, request, make_response, \
-    render_template
+from flask import Flask, redirect, url_for, request, \
+    make_response, render_template
 
 from database import get_user_by_tg_id, get_user, init_db
+from services import (
+    data_check_str,
+    check_parameters,
+    generate_session_id,
+)
 
 
-def check_tg_auth(auth_data, bot_token):
-    auth_data = auth_data.copy()
-    true_hash = auth_data.pop('hash')
-    if 'photo_url' in auth_data:
-        auth_data['photo_url'] = urllib.parse.unquote(auth_data['photo_url'])
-    
-    tg_data = "\n".join([f'{k}={auth_data[k]}' for k in sorted(auth_data)])
-    tg_data = tg_data.encode()
-    secret_key = hashlib.sha256(bot_token.encode()).digest()
-    hash = hmac.new(secret_key, tg_data, digestmod=hashlib.sha256).hexdigest()
-    return hmac.compare_digest(hash.encode(), true_hash.encode())
-
-def check_parameters(source) -> dict:
-    auth_data = {}
-    for key, value in source.items():
-        auth_data[key] = value
-
-    if ('id' not in auth_data or
-        'hash' not in auth_data):
-        return None
-    
-    return auth_data
-
-def generate_session_id():
-    return str(uuid.uuid4())
+API_TOKEN = os.getenv('API_TOKEN')
+BOT_URL = os.getenv('BOT_URL')
+BOT_LOGIN = os.getenv('BOT_LOGIN')
+SITE_URL = os.getenv('SITE_URL')
 
 app = Flask(__name__)
-session = {}
+sessions: Dict[str, Dict[str, Union[str, int]]] = {}
+
+def authorizhed(func):
+    def wrapper(*args, **kwargs):
+        session_id = request.cookies.get('session_id')
+        if session_id and sessions.get(session_id):
+            return func(*args, **kwargs)
+        return redirect(url_for('index'))
+
+    return wrapper
 
 @app.route('/')
-def index():
-
+def index() -> Union[str, redirect, make_response, render_template]:
     if auth_data := check_parameters(request.args):
-        if not check_tg_auth(auth_data, os.getenv('API_TOKEN')):
+        if not data_check_str(auth_data, API_TOKEN):
             return 'Wrong hash'
         user = get_user_by_tg_id(sql_session, auth_data['id'])
         if user:
             response = make_response(redirect(url_for('user')))
             session_id = generate_session_id()
-            session[session_id] = {
+            sessions[session_id] = {
                 'id': user.id,
                 'photo_url': auth_data.get('photo_url'),
             }
@@ -59,30 +48,26 @@ def index():
             return redirect(url_for('register'))
     elif request.cookies.get('session_id'):
         return redirect(url_for('user'))
-    else:
-        response = make_response(render_template('index.html.jinja'))
-        return response
+
+    return render_template('index.html.jinja', data_telegram_login=BOT_LOGIN, data_auth_utl=SITE_URL)
 
 @app.route('/register')
-def register():
-    return redirect("https://t.me/kingdomcome_bot?start=start")
+def register() -> redirect:
+    return redirect(BOT_URL)
 
 @app.route('/user')
-def user():
-    if request.cookies.get('session_id'):
-        if user_session := session.get(request.cookies.get('session_id')):
-            user = get_user(sql_session, user_session['id'])
-            return render_template('user.html.jinja', user=user, photo_url=user_session['photo_url'])
-        else:
-            return redirect(url_for('logout'))
-    else:
-        return redirect(url_for('index'))
+@authorizhed
+def user() -> Union[str, redirect]:
+    user = get_user(sql_session, sessions[request.cookies.get('session_id')]['id'])
+    if user:
+        return render_template('user.html.jinja', user=user)
+    return redirect(url_for('index'))
 
 @app.route('/logout')
-def logout():
+def logout() -> make_response:
     response = make_response(redirect(url_for('index')))
-    if request.cookies.get('session_id'):
-        session.pop(request.cookies.get('session_id'))
+    if session_id := request.cookies.get('session_id'):
+        sessions.pop(session_id, None)
     for key in request.cookies:
         response.set_cookie(key, '', expires=0)
     return response
