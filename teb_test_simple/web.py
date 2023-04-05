@@ -34,7 +34,7 @@ def authorizhed(func):
         elif session_id:
             return redirect(url_for('logout'))
         return redirect(url_for('index'))
-
+    wrapper.__name__ = func.__name__
     return wrapper
 
 @app.route('/')
